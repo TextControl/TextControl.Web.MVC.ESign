@@ -1,0 +1,24 @@
+﻿@using Microsoft.AspNetCore.Identity
+@inject SignInManager<LiteDB.Identity.Models.LiteDbUser> SignInManager
+@inject UserManager<LiteDB.Identity.Models.LiteDbUser> UserManager
+
+@if (SignInManager.IsSignedIn(User)) {
+<ul class="navbar-nav d-flex">
+    <li class="nav-item identity">
+        <a class="nav-link" asp-area="Identity" asp-page="/Account/Manage/Index" title="Manage"><span class="material-icons">account_circle</span></a>
+    </li>
+    <li class="nav-item identity">
+        <a class="nav-link" asp-area="Identity" asp-page="/Account/Logout"><span class="material-icons">logout</span></a>
+    </li>
+</ul>
+}
+else {
+<ul class="navbar-nav d-flex">
+    <li class="nav-item identity">
+        <a class="nav-link" asp-area="Identity" asp-page="/Account/Register"><span class="material-icons">person_add</span></a>
+    </li>
+    <li class="nav-item identity">
+        <a class="nav-link" asp-area="Identity" asp-page="/Account/Login"><span class="material-icons">login</span></a>
+    </li>
+</ul>
+}

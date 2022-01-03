@@ -1,0 +1,42 @@
+﻿@model ValidatedDocument
+@using TXTextControl.Web.MVC
+
+@{
+   ViewData["Title"] = "Validation Summary";
+}
+
+<section id="home" class="container section">
+
+    <div class="row">
+
+        <div class="col-md-12">
+            <h1>The uploaded PDF document is @(Model.Valid == true ? "valid" : "invalid")</h1>
+        </div>
+
+    </div>
+
+    <div class="row">
+        <div class="col-md-2">
+            <h1><span style="font-size: 120pt;" class="material-icons @(Model.Valid == true ? "text-success" : "text-danger")">fingerprint</span></h1>
+        </div>
+        <div class="col-md-10">
+            <h3 class="mt-3">Envelope: <strong>@Model.Envelope.Name</strong></h3>
+
+            <p>
+                Envelope ID: <strong>@Model.Envelope.EnvelopeID</strong><br />
+                From: <strong>@Model.Envelope.Sender</strong>
+            </p>
+        </div>
+    </div>
+
+    @if (Model.Valid == true) {
+
+        @await Html.PartialAsync("~/Views/Partial/_AuditTrail.cshtml", Model.Envelope)
+    }
+    else {
+        <a asp-action="validate" asp-controller="review" class="btn btn-warning mb-3"><strong>Validate another Document</strong></a>
+    }
+
+
+
+</section>

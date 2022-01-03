@@ -1,0 +1,82 @@
+﻿@page
+@model LoginModel
+
+@{
+    ViewData["Title"] = "Log in";
+}
+
+<section id="home" class="container section">
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="info">
+                <div class="row">
+                    <div class="col-lg-2">
+                        <span class="material-icons text-white">emoji_emotions</span>
+                    </div>
+                    <div class="col-lg-9 offset-lg-1">
+                        <h1>Why do I need an account?</h1>
+                        <h4>This demo shows a complete workflow including e-mail notifications.</h4>
+                        
+                        <ul>
+                            <li> You can delete all personal data and <strong>remove your account</strong> at any time <strong>with a simple click</strong>.</li>
+                            <li>We will not use your e-mail address for any other purpose than for this demo.</li>
+                            <li><strong>We will not sell your data.</strong></li>
+                            <li>Feel free to use any <a target="_blank" href="https://www.google.com/search?q=disposable+email">disposable e-mail address</a>. We want to convince you with our technology, not spam!</li>
+                        </ul>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <h1>@ViewData["Title"]</h1>
+
+    <div class="row">
+        <div class="col-lg-4">
+            <section>
+                <form id="account" method="post">
+                    <h4>Use a local account to log in.</h4>
+                    <hr />
+                    <div asp-validation-summary="All" class="text-danger"></div>
+                    <div class="mb-3">
+                        <label class="form-label" asp-for="Input.Email"></label>
+                        <input autocomplete="on" asp-for="Input.Email" class="form-control" />
+                        <span asp-validation-for="Input.Email" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" asp-for="Input.Password"></label>
+                        <input autocomplete="on" asp-for="Input.Password" class="form-control" />
+                        <span asp-validation-for="Input.Password" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <div class="checkbox">
+                            <label class="form-label" asp-for="Input.RememberMe">
+                                <input asp-for="Input.RememberMe" />
+                                @Html.DisplayNameFor(m => m.Input.RememberMe)
+                            </label>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <button type="submit" class="btn btn-primary">Log In</button>
+                    </div>
+                    <div class="mb-3">
+                        @*<p>
+                                <a id="forgot-password" asp-page="./ForgotPassword">Forgot your password?</a>
+                            </p>*@
+                        <p>
+                            <a asp-page="./Register" asp-route-returnUrl="@Model.ReturnUrl">Register as a new user</a>
+                        </p>
+                    </div>
+                </form>
+            </section>
+        </div>
+
+    </div>
+
+    @section Scripts {
+        <partial name="_ValidationScriptsPartial" />
+    }
+
+</section>

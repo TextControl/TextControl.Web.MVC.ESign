@@ -1,0 +1,177 @@
+﻿@model TemplateEditModel
+@using TXTextControl.Web.MVC
+
+<div class="editor-close">
+    <button onclick="saveDocument()" class="btn btn-warning"><strong>Save and Close</strong></button>
+</div>
+
+<div class="editor-wrapper">
+    <div class="sidebar">
+
+        <div class="list-group">
+
+            <h5>Merge Fields <span role="button" data-bs-toggle="tooltip" data-bs-placement="top" title="Merge fields are pre-populated before a document is sent to a user. Typically, those fields are used for known values such as name, company name or fixed dates." class="material-icons small">info</span></h5>
+
+            <a onclick="TextControl.esign.insertMergeField()" class="list-group-item list-group-item-action toolbox-item">
+                <span class="material-icons">merge_type</span> Merge Field
+            </a>
+
+            <a onclick="TextControl.esign.insertDateField()" class="list-group-item list-group-item-action toolbox-item mb-3">
+                <span class="material-icons">calendar_today</span> Current Date Field
+            </a>
+
+            <h5 class="mt-3">Signature Fields <span role="button" data-bs-toggle="tooltip" data-bs-placement="top" title="Signature fields are used to capture signatures from users. This defines locations where the user should sign a document. Typically, these signature boxes are positioned at the end of a contract." class="material-icons small">info</span></h5>
+
+            <a onclick="TextControl.esign.insertTextFrame()" class="list-group-item list-group-item-action toolbox-item mb-3">
+                <span class="material-icons">drive_file_rename_outline</span> Signature Box
+            </a>
+
+            <h5 class="mt-3">Form Fields <span role="button" data-bs-toggle="tooltip" data-bs-placement="top" title="Form fields are used to collect additional data from users. Typically, form fields are used to ask for data that are not known at the time of preparing the document." class="material-icons small">info</span></h5>
+
+            <a onclick="TextControl.esign.insertTextFormField()" class="list-group-item list-group-item-action toolbox-item">
+                <span class="material-icons">text_fields</span> Text Form Field
+            </a>
+            <a onclick="TextControl.esign.insertCheckbox()" class="list-group-item list-group-item-action toolbox-item">
+                <span class="material-icons">check_box</span> Checkbox
+            </a>
+            <a onclick="TextControl.esign.insertDropDownFormField()" class="list-group-item list-group-item-action toolbox-item">
+                <span class="material-icons">arrow_drop_down</span> Drop-Down
+            </a>
+            <a onclick="TextControl.esign.insertDatePicker()" class="list-group-item list-group-item-action toolbox-item">
+                <span class="material-icons">today</span> Date Picker
+            </a>
+        </div>
+
+        <div id="fieldProperties" class="d-none">
+            <h5>Field Properties</h5>
+            <div class="form-check">
+                <input type="checkbox" class="form-check-input" id="fieldRequired">
+                <label class="form-check-label" for="fieldRequired">Required field</label>
+            </div>
+            <div class="mt-2">
+                <label for="fieldName" class="form-label">Field name</label>
+                <div class="input-group">
+                    <input type="text" required placeholder="Add field name" class="form-control" id="fieldName" aria-describedby="fieldNameHelp">
+                    <button class="btn btn-outline-secondary" type="button" id="fieldNameApply">Apply</button>
+                </div>
+                <div id="fieldNameHelp" class="form-text">Unique name of the field.</div>
+            </div>
+        </div>
+
+    </div>
+    <div class="editor-document">
+        @Html.TXTextControl().TextControl(settings => {
+            settings.Dock = TXTextControl.Web.DockStyle.Fill;
+        }).Render()
+    </div>
+</div>
+
+<script>
+    TXTextControl.addEventListener("textControlLoaded", function () {
+        TextControl.esign.getDocument("@Model.Template.TemplateID", "template");
+
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl)
+        })
+
+    });
+
+    var curField;
+
+    TXTextControl.addEventListener("ribbonTabsLoaded", function () {
+        TXTextControl.addEventListener("textFieldEntered", function (ff) {
+
+            if (ff.textField.type === "TEXTFORMFIELD" ||
+                ff.textField.type === "DATEFORMFIELD" ||
+                ff.textField.type === "APPLICATIONFIELD") {
+
+                curField = ff.textField;
+
+                $("#fieldProperties").removeClass('d-none');
+
+                $("#fieldName").val(ff.textField.name);
+
+                $("#fieldNameApply").unbind("click");
+
+                $("#fieldNameApply").click(function () {
+
+                    var newValue = $("#fieldName").val();
+
+                    if (curField.type === "APPLICATIONFIELD") {
+
+                        TXTextControl.applicationFields.getItem(function (af) {
+
+                            if (af === null)
+                                return;
+
+                            af.getParameters(function (par) {
+                                par[0] = newValue;
+                                af.setParameters(par);
+
+                                TextControl.esign.showToast("Field name applied.");
+                            });
+                            
+                        });
+
+                    }
+
+                    if (curField.type === "TEXTFORMFIELD" ||
+                        curField.type === "DATEFORMFIELD") {
+                        TXTextControl.formFields.getItem(function (af) {
+                            af.setName(newValue);
+                            TextControl.esign.showToast("Field name applied.");
+                        });
+                    }
+
+                });
+
+                if (ff.textField.type === "TEXTFORMFIELD" ||
+                    ff.textField.type === "DATEFORMFIELD") {
+
+                    console.log(ff.textField.type);
+
+                    $("#fieldRequired").removeAttr("disabled");
+
+                    if (ff.textField.id === 1)
+                        $("#fieldRequired").prop("checked", true);
+                    else
+                        $("#fieldRequired").prop("checked", false);
+
+                }
+                else {
+                    $("#fieldRequired").attr("disabled", "disabled");
+                }
+            }
+
+        });
+
+        $("#fieldRequired").change(function () {
+            if (this.checked) {
+                TXTextControl.formFields.getItem(function (ff) {
+                    ff.setID(1);
+                });
+            }
+            else {
+                TXTextControl.formFields.getItem(function (ff) {
+                    ff.setID(0);
+                });
+            }
+        });
+
+        TXTextControl.addEventListener("textFieldLeft", function () {
+            $("#fieldProperties").addClass('d-none');
+        });
+
+        //$("#ribbonGroupFormFieldProperties tr:last-child").remove();
+    });
+
+    function saveDocument() {
+        TXTextControl.saveDocument(32, function (document) {
+            TextControl.esign.saveTemplate(document.data, "@Model.Template.TemplateID");
+        });
+    }
+</script>
+
+
+

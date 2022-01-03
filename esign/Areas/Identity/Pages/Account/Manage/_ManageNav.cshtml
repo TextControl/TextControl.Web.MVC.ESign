@@ -1,0 +1,18 @@
+﻿@inject SignInManager<LiteDB.Identity.Models.LiteDbUser> SignInManager
+@inject UserManager<LiteDB.Identity.Models.LiteDbUser> UserManager
+
+@{
+    var hasExternalLogins = (await SignInManager.GetExternalAuthenticationSchemesAsync()).Any();
+}
+<ul class="nav nav-pills flex-column">
+    <li class="nav-item"><a class="nav-link @ManageNavPages.IndexNavClass(ViewContext)" id="profile" asp-page="./Index">Profile</a></li>
+
+    @if (UserManager.FindByNameAsync(User.Identity.Name).Result.EmailConfirmed == false) {
+        <li class="nav-item"><a class="nav-link @ManageNavPages.AddEmailNavClass(ViewContext)" id="add-email" asp-page="./AddEmail">Add E-Mail</a></li>
+    }
+    else {
+        <li class="nav-item"><a class="nav-link @ManageNavPages.ChangePasswordNavClass(ViewContext)" id="change-password" asp-page="./ChangePassword">Change Password</a></li>
+    }
+
+    <li class="nav-item"><a class="nav-link @ManageNavPages.PersonalDataNavClass(ViewContext)" id="personal-data" asp-page="./PersonalData">Personal data</a></li>
+</ul>

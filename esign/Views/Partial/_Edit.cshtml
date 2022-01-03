@@ -1,0 +1,139 @@
+﻿@model SignModel
+@using TXTextControl.Web.MVC
+
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 5">
+    <div id="liveToast" class="toast hide text-white bg-success" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-header">
+            <span class="material-icons">
+                fact_check
+            </span>&nbsp;
+            <strong class="me-auto">Text Control eSign</strong>
+            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div id="liveToastMessage" class="toast-body">
+
+        </div>
+    </div>
+</div>
+
+<div class="editor-close">
+    <button onclick="saveDocument()" class="btn btn-warning"><strong>Save and Close</strong></button>
+</div>
+
+<div class="editor-wrapper">
+    <div class="sidebar">
+
+        <div class="list-group">
+
+            <h5>Signature Fields</h5>
+
+            @{
+                foreach (Signer signer in Model.Envelope.Signers) {
+                    <a id="txsign_@signer.Id" onclick="TextControl.esign.insertTextFrame('@signer.Id', '@signer.Name')" class="list-group-item list-group-item-action toolbox-item toolbox-item-small">
+                        <span class="material-icons">drive_file_rename_outline</span>@signer.Email
+                    </a>
+                }
+            }
+
+            @*@{ if (Model.Envelope.Signers.Count == 1) {*@
+                <h5 class="mt-4">Form Fields</h5>
+
+                <select id="formOwner" class="form-select mb-2">
+                    @foreach (Signer signer in Model.Envelope.Signers) {
+                    <option value="@signer.Id">@signer.Email</option>
+                    }
+                </select>
+
+                <a onclick="TextControl.esign.insertTextFormField()" class="list-group-item list-group-item-action toolbox-item ">
+                    <span class="material-icons">text_fields</span> Text Form Field
+                </a>
+                <a onclick="TextControl.esign.insertCheckbox()" class="list-group-item list-group-item-action toolbox-item">
+                    <span class="material-icons">check_box</span> Checkbox
+                </a>
+                <a onclick="TextControl.esign.insertDropDownFormField()" class="list-group-item list-group-item-action toolbox-item">
+                    <span class="material-icons">arrow_drop_down</span> Drop-Down
+                </a>
+                <a onclick="TextControl.esign.insertDatePicker()" class="list-group-item list-group-item-action toolbox-item">
+                    <span class="material-icons">today</span> Date Picker
+                </a>
+
+               @*}
+            }*@
+        </div>
+
+        <div id="fieldProperties" class="d-none">
+            <h5>Field Properties</h5>
+            <div class="form-check">
+                <input type="checkbox" class="form-check-input" id="fieldRequired">
+                <label class="form-check-label" for="fieldRequired">Required field</label>
+            </div>
+        </div>
+
+    </div>
+    <div class="editor-document no-tabs">
+        @Html.TXTextControl().TextControl(settings => {
+            settings.Dock = TXTextControl.Web.DockStyle.Fill;
+        }).Render()
+    </div>
+</div>
+
+<script>
+    TXTextControl.addEventListener("textControlLoaded", function () {
+        TextControl.esign.getDocument("@Model.Envelope.EnvelopeID", "envelope");
+    });
+
+    TXTextControl.addEventListener("ribbonTabsLoaded", function () {
+        TXTextControl.addEventListener("textFieldEntered", function (ff) {
+            TXTextControl.ribbon.selectedTab = "tabFormFields";
+
+            if (ff.textField.type === "TEXTFORMFIELD" ||
+                ff.textField.type === "DATEFORMFIELD") {
+                $("#fieldProperties").removeClass('d-none');
+
+                if (ff.textField.id === 1)
+                    $("#fieldRequired").prop("checked", true);
+                else
+                    $("#fieldRequired").prop("checked", false);
+            }
+
+        });
+
+        $("#fieldRequired").change(function () {
+            if (this.checked) {
+                TXTextControl.formFields.getItem(function (ff) {
+                    ff.setID(1);
+                });
+            }
+            else {
+                TXTextControl.formFields.getItem(function (ff) {
+                    ff.setID(0);
+                });
+            }
+        });
+
+        TXTextControl.addEventListener("textFieldLeft", function () {
+            $("#fieldProperties").addClass('d-none');
+        });
+
+        TXTextControl.addEventListener("textFrameDeleted", function () {
+            TextControl.esign.checkTextFrames();
+        });
+
+        //TXTextControl.displayColors.setDesktopColor("#e5e5e5");
+        //TXTextControl.displayColors.setLightShadowColor("#e5e5e5");
+        //TXTextControl.displayColors.setDarkShadowColor("#e5e5e5");
+        TXTextControl.showVerticalRuler(false);
+        TXTextControl.showHorizontalRuler(false);
+        TXTextControl.showStatusBar(false);
+        //$("#ribbonGroupFormFieldProperties tr:last-child").remove();
+    });
+
+    function saveDocument() {
+        TXTextControl.saveDocument(32, function (document) {
+            TextControl.esign.saveEditor(document.data, "@Model.Envelope.EnvelopeID");
+        });
+    }
+</script>
+
+
+

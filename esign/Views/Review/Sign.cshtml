@@ -1,0 +1,102 @@
+﻿@{
+    Layout = null;
+}
+
+@model SignModel
+@using TXTextControl.Web.MVC.DocumentViewer
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Please sign the Document - Text Control eSign</title>
+    <link href="~/twitter-bootstrap/css/bootstrap.css" rel="stylesheet" />
+    <link rel="stylesheet" href="~/css/site.min.css" />
+</head>
+<body>
+
+    <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 99999999">
+        <div id="liveToast" class="toast text-white bg-success" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header">
+                <span class="material-icons">
+                    fact_check
+                </span>&nbsp;
+                <strong class="me-auto">Text Control eSign</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div id="liveToastMessage" class="toast-body">
+
+            </div>
+        </div>
+    </div>
+
+    <section id="home">
+
+        @Html.TXTextControl().DocumentViewer(s => {
+        s.DocumentData = @Model.Document;
+        s.Dock = DocumentViewerSettings.DockStyle.Window;
+        s.IsSelectionActivated = true;
+        s.ShowThumbnailPane = true;
+        s.SignatureSettings = new SignatureSettings() {
+            OwnerName = Model.Envelope.Sender,
+            ShowSignatureBar = true,
+            SignerName = Model.Signer.Name,
+            SignatureBoxName = "txsign_" + Model.Signer.Id,
+            UniqueId = Model.Envelope.EnvelopeID
+        };
+    }).Render()
+
+    </section>
+
+    <script src="~/jquery/jquery.js"></script>
+    <script src="~/twitter-bootstrap/js/bootstrap.bundle.js"></script>
+    <script src="~/js/site.min.js" asp-append-version="true"></script>
+
+    <script>
+        $(document).ready(function () {
+            TXDocumentViewer.signatures.setSubmitCallback(exportPDF);
+        });
+
+        window.addEventListener("documentViewerLoaded", function () {
+
+            $("#tx-documentViewer").css("z-index", 800);
+
+            TXDocumentViewer.signatures.setBeforeSubmitCallback(function () {
+                TextControl.esign.showToast("Sending document...");
+            });
+        });
+
+        function exportPDF(e) {
+
+            var signature = localStorage.getItem('__TX-Viewer-Sig-Image');
+
+            var signedDocumentModel = {
+                "envelope": @Json.Serialize(Model.Envelope),
+                "SignatureModel": e,
+                "SignerId": "@Model.Signer.Id",
+                "SignatureImage": signature
+            };
+
+            var serviceURL = "@Url.Action("SignDocumentFinal", "Review")";
+            // send document to controller
+            $.ajax({
+                type: "POST",
+                url: serviceURL,
+                data: signedDocumentModel,
+                success: successFunc,
+                error: errorFunc
+            });
+        }
+
+        function successFunc(data, status) {
+            window.location.replace("/review/thanks/" + window.location.pathname.split("/").pop());
+        }
+
+        function errorFunc(data, status) {
+            alert(data);
+        }
+
+    </script>
+  </body>
+</html>

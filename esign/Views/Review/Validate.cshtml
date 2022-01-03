@@ -1,0 +1,35 @@
+﻿@model ValidateModel
+
+@{
+    ViewData["Title"] = "Validate Document";
+}
+
+<section id="home" class="container section">
+
+    <h1>Validate a Document</h1>
+
+    <div class="row mt-5">
+        <div class="col-sm-6">
+            <p>By uploading an executed, fully signed PDF document, the integrity and validity can be checked. Please select the PDF document from your local machine.</p>
+
+            <form asp-controller="review" asp-action="validateDocument" enctype="multipart/form-data" method="post" autocomplete="on">
+                <div class="box-frame">
+                     <div class="mb-3">
+                        <input required asp-for="Document" class="form-control" type="file" accept=".pdf" aria-describedby="DocumentHelp" />
+                        <div id="DocumentHelp" class="form-text">Select a signed PDF document from your local machine.</div>
+                    </div>
+                </div>
+
+                @if (Model.Error == true) {
+                    <div class="alert alert-danger mt-3" role="alert">
+                        The envelope is invalid. Please check the document.
+                    </div>
+                }
+
+                <button class="btn btn-warning mt-3" type="submit"><strong>Validate Document</strong></button>
+            </form>
+        </div>
+    </div>
+
+</section>
+

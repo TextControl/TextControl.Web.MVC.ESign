@@ -1,0 +1,191 @@
+﻿@using Microsoft.AspNetCore.Identity
+@inject SignInManager<LiteDB.Identity.Models.LiteDbUser> SignInManager
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <!-- Google Tag Manager -->
+    <script>
+        (function (w, d, s, l, i) {
+            w[l] = w[l] || []; w[l].push({
+                'gtm.start':
+                    new Date().getTime(), event: 'gtm.js'
+            }); var f = d.getElementsByTagName(s)[0],
+                j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : ''; j.async = true; j.src =
+                    'https://www.googletagmanager.com/gtm.js?id=' + i + dl; f.parentNode.insertBefore(j, f);
+        })(window, document, 'script', 'dataLayer', 'GTM-W5W5HXH');</script>
+    <!-- End Google Tag Manager -->
+
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Text Control eSign</title>
+    <meta name="description" content="Add electronic signatures to your business workflows. Reference implementation that shows how to use Text Control libraries to integrate electronic signatures to web applications.">
+    <link href="~/twitter-bootstrap/css/bootstrap.css" rel="stylesheet" />
+    <link rel="stylesheet" href="~/css/site.min.css" />
+</head>
+<body>
+
+    <!-- Google Tag Manager (noscript) -->
+    <noscript>
+        <iframe src="https://www.googletagmanager.com/ns.html?id=GTM-W5W5HXH"
+                height="0" width="0" style="display:none;visibility:hidden"></iframe>
+    </noscript>
+    <!-- End Google Tag Manager (noscript) -->
+
+    <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">New Text Block Section</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="recipient-name" class="col-form-label">Section Name:</label>
+                        <input type="text" class="form-control" id="section-name" value="Section Name">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button onclick="TextControl.esign.addSection()" data-bs-dismiss="modal" type="button" class="btn btn-primary">Insert Section</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <header>
+        <nav class="navbar fixed-top navbar-expand-lg navbar-light">
+            <div class="container-fluid">
+                <a class="navbar-brand" asp-action="Overview" asp-controller="Home">Text Control <u>eSign</u> <sup style="font-weight: 100; color: #c2c2c2;"><small>Demo</small></sup></a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                        <li class="nav-item @(ViewContext.RouteData.Values["Controller"]?.ToString() == "New" ? "active" : "")">
+                            <a class="nav-link" asp-controller="new" asp-action="index">New</a>
+                        </li>
+
+                        @if (SignInManager.IsSignedIn(User))
+                        {
+
+                            <li class="nav-item @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Envelope" ? "active" : "")">
+                                <a class="nav-link" asp-controller="envelope" asp-action="index">Signatures</a>
+                            </li>
+                            <li class="nav-item @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Contract" ? "active" : "")">
+                                <a class="nav-link" asp-controller="contract" asp-action="index">Contracts</a>
+                            </li>
+                            <li class="nav-item @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Template" ? "active" : "")">
+                                <a class="nav-link" asp-controller="template" asp-action="index">Templates</a>
+                            </li>
+                            <li class="nav-item @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Agreement" ? "active" : "")">
+                                <a class="nav-link" asp-controller="agreement" asp-action="index">Agreement Generator</a>
+                            </li>
+                        }
+                    </ul>
+                    <ul class="navbar-nav d-flex">
+                        <li class="nav-item @(ViewContext.RouteData.Values["Action"]?.ToString() == "External" ? "active" : "")">
+                            <a class="nav-link" asp-controller="review" asp-action="external">
+
+                                <span class="d-none d-xl-block">Sign a Document</span>
+                                <span class="d-xl-none">Sign</span>
+
+                            </a>
+                        </li>
+                        <li class="nav-item @(ViewContext.RouteData.Values["Action"]?.ToString() == "Validate" ? "active" : "")">
+                            <a class="nav-link" asp-controller="review" asp-action="validate">
+
+                                <span class="d-none d-xl-block">Validate a Document</span>
+                                <span class="d-xl-none">Validate</span>
+
+                            </a>
+                        </li>
+                    </ul>
+                    <div class="d-flex">
+                        <partial name="_LoginPartial" />
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main id="main" role="main" @*class="container"*@>
+        @RenderBody()
+    </main>
+
+    <div class="esign-info">
+        <div class="container">
+            <div class="row">
+                <div class="col-12">
+                    <strong class="h4">&#9432;</strong> This reference demo implementation is an <strong>ASP.NET Core Web App</strong> (.NET 5) that uses <strong><a target="_blank" href="https://www.textcontrol.com/products/asp-dotnet/tx-text-control-dotnet-server/overview/">TX Text Control .NET Server for ASP.NET 30.0</a></strong>.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-3">
+                    <h4>Text Control eSign</h4>
+                </div>
+                <div class="col-md-2 d-none d-lg-block">
+                    <h3>Licensing</h3>
+                    <ul>
+                        <li><a target="_blank" href="https://www.textcontrol.com/products/asp-dotnet/tx-text-control-dotnet-server/downloads/">Trial version</a></li>
+                        <li><a target="_blank" href="https://account.textcontrol.com/">Online store</a></li>
+                        <li><a target="_blank" href="https://www.textcontrol.com/products/asp-dotnet/tx-text-control-dotnet-server/pricing/">Pricing</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-2 d-none d-lg-block">
+                    <h3>Resources</h3>
+                    <ul>
+                        <li><a target="_blank" href="https://docs.textcontrol.com/textcontrol/asp-dotnet/">Documentation</a></li>
+                        <li><a target="_blank" href="https://www.textcontrol.com/blog/">Blog</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-2 d-none d-lg-block">
+                    <h3>Support</h3>
+                    <ul>
+                        <li><a target="_blank" href="https://www.textcontrol.com/external/new-ticket/">Open support case</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-3 d-none d-lg-block">
+                    <h3>Ready to talk?</h3>
+                    <ul>
+                        <li><a target="_blank" href="https://www.textcontrol.com/contact/email/general/">Contact us</a></li>
+                        <li class="mt-3">USA: <a href="tel:+17045447445">+1 704 544 7445</a></li>
+                        <li>Europe: <a href="tel:+4942706710">+49 421 427067 10</a></li>
+                        <li class="mt-3">
+                            <a target="_blank" href="https://github.com/textcontrol"><img class="social" src="~/images/icon_github.svg" /></a>
+                            <a target="_blank" href="https://twitter.com/txtextcontrol"><img class="social" src="~/images/icon_twitter.svg" /></a>
+                            <a target="_blank" href="https://www.linkedin.com/company/tx-text-control"><img class="social" src="~/images/icon_linkedin.svg" /></a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="row mt-5 mb-2">
+                <div class="col-md-8">
+                    <img class="txlogo" src="~/images/tx_logo.svg" />
+                    <p class="mt-3">Text Control is an award-winning vendor of document processing and reporting components for desktop, web, cloud and mobile development technologies.</p>
+
+                    <p class="mt-3">Text Control eSign is a reference implementation realized with Text Control developer libraries.</p>
+
+                    <p>We <span style="color: red;">♥</span> documents.</p>
+                </div>
+            </div>
+            <div class="row mt-3">
+                <div class="col-md-8">
+                    <p class="small">Copyright &copy;  @DateTime.Now.Year.ToString() Text Control GmbH and Text Control, LLC. All rights reserved.</p>
+                    <p class="small">TX Text Control, DS Server and other product names used herein might be trademarks or registered trademarks of Text Control GmbH and/or one of its subsidiaries or affiliates in the U.S. and/or other countries. <a target="_blank" href="https://www.textcontrol.com/company/legal/">Impressum</a>.</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+    <script src="~/jquery/jquery.js"></script>
+    <script src="~/twitter-bootstrap/js/bootstrap.bundle.js"></script>
+    <script src="~/js/site.min.js" asp-append-version="true"></script>
+    @RenderSection("Scripts", required: false)
+</body>
+</html>

@@ -1,0 +1,36 @@
+﻿@model ReviewModel
+
+@{
+    ViewData["Title"] = "Access Envelope";
+}
+
+<section id="home" class="container section">
+
+    <h1>Received a Document Access ID?</h1>
+
+    <div class="row mt-5">
+        <div class="col-sm-6">
+            <p>Did you receive a <em>Document Access ID</em> from someone requesting a signature from you?</p>
+
+            <form asp-controller="review" asp-action="externalLink" method="post" autocomplete="on">
+                <div class="box-frame">
+                    <div class="mb-3">
+                        <label for="envelopeId" class="form-label">Document Access ID</label>
+                        <input asp-for="EnvelopeID" type="text" required placeholder="Copy and paste the document access ID" class="form-control" id="envelopeId" aria-describedby="EnvelopeHelp">
+                        <div id="EnvelopeHelp" class="form-text">The document access ID you received.</div>
+                    </div>
+                </div>
+
+                @if (Model.Error == true) {
+                    <div class="alert alert-danger mt-3" role="alert">
+                        The envelope is invalid. Please check the access ID.
+                    </div>
+                }
+
+                <button class="btn btn-warning mt-3" type="submit"><strong>Access Document</strong></button>
+            </form>
+        </div>
+    </div>
+
+</section>
+

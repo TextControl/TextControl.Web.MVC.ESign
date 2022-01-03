@@ -1,0 +1,115 @@
+﻿@model esign.Models.CollaborationModel
+@{
+   Layout = null;
+
+   byte[] octets = System.Text.Encoding.ASCII.GetBytes(Model.Contract.ContractID + ":" + Model.Contract.UserID);
+   var envelope_code = Convert.ToBase64String(octets);
+}
+
+@using TXTextControl.Web.MVC
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Please review the Document - Text Control eSign</title>
+    <link rel="stylesheet" href="~/twitter-bootstrap/css/bootstrap.css" />
+    <link rel="stylesheet" href="~/css/site.min.css" />
+</head>
+<body style="background-color: #e5e5e5">
+
+    <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 99999999">
+        <div id="liveToast" class="toast text-white bg-success" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header">
+                <span class="material-icons">
+                    fact_check
+                </span>&nbsp;
+                <strong class="me-auto">Text Control eSign</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div id="liveToastMessage" class="toast-body">
+
+            </div>
+        </div>
+    </div>
+
+
+    <div class="editor-close">
+        <button id="btnAccept" onclick="saveDocument()" class="btn btn-warning"><strong>Save and Send</strong></button>
+        <button id="btnAcceptAll" disabled onclick="acceptAll()" class="btn btn-success mx-2"><strong>Accept All</strong></button>
+        <button id="btnChanges" onclick="makeChanges()" class="btn btn-danger mx-5"><strong>Make Changes</strong></button>
+    </div>
+
+        <div class="editor-wrapper">
+            <div class="editor-document large">
+                @Html.TXTextControl().TextControl(settings => {
+               settings.Dock = TXTextControl.Web.DockStyle.Fill;
+               settings.UserNames = new string[] { Model.User };
+           }).Render()
+            </div>
+        </div>
+
+
+    <script src="~/jquery/jquery.js"></script>
+    <script src="~/twitter-bootstrap/js/bootstrap.bundle.js"></script>
+    <script src="~/js/site.min.js" asp-append-version="true"></script>
+
+    <script>
+        TXTextControl.addEventListener("textControlLoaded", function () {
+            TextControl.esign.getContract("@envelope_code");
+        });
+
+        TXTextControl.addEventListener("ribbonTabsLoaded", function () {
+            $("#ribbonTabProofing_btnTrackChanges").hide();
+
+            TXTextControl.editMode = 3;
+            TXTextControl.isTrackChangesEnabled = true;
+            TXTextControl.showSideBar(TXTextControl.SideBarType.TrackChanges, 1);
+
+            TextControl.esign.showToast("Document is locked. To propose changes, click the 'Make Changes' button!");
+
+            TXTextControl.trackedChanges.getCount(function (e) {
+                if (e > 0) {
+                    $("#btnAcceptAll").removeAttr("disabled");
+                }
+            });
+
+        });
+
+        function acceptAll() {
+            removeAllChanges(true);
+        }
+
+        function removeAllChanges(accept) {
+            TXTextControl.trackedChanges.getCount(count => {
+
+                if (count === 0) return;
+
+                // recursively loop through all changes
+                // and remove them
+                TXTextControl.trackedChanges.elementAt(0, element => {
+                    TXTextControl.trackedChanges.remove(element, accept, deleted => {
+                        if (deleted === true) removeAllChanges(accept);
+                    });
+                });
+
+            });
+        }
+
+        function makeChanges() {
+            TXTextControl.editMode = 1;
+            $("#btnAccept").html("<strong>Save and Propose Changes<strong>");
+            $("#btnChanges").hide();
+
+            TextControl.esign.showToast("Document unlocked. You can make changes to the document now!");
+        }
+
+        function saveDocument() {
+            TXTextControl.saveDocument(32, function (document) {
+                TextControl.esign.saveContract(document.data, "@envelope_code", @Model.Owner.ToString().ToLower());
+            });
+        }
+    </script>
+  </body>
+</html>

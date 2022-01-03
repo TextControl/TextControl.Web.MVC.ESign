@@ -1,0 +1,156 @@
+﻿@model EditModel
+@using TXTextControl.Web.MVC
+
+@{
+   ViewData["Title"] = "Envelope Summary";
+
+   byte[] octets = System.Text.Encoding.ASCII.GetBytes(Model.Envelope.EnvelopeID + ":" + Model.Envelope.UserID);
+   var envelope_code = Convert.ToBase64String(octets);
+   var host = Context.Request.Scheme + "://" + Context.Request.Host;
+}
+
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 5">
+    <div id="liveToast" class="toast hide text-white bg-success" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-header">
+            <span class="material-icons">
+                fact_check
+            </span>&nbsp;
+            <strong class="me-auto">Text Control eSign</strong>
+            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div id="liveToastMessage" class="toast-body">
+
+        </div>
+    </div>
+</div>
+
+<div id="editor"></div>
+
+<section id="home" class="container section">
+
+    <div class="row">
+        <div class="col-md-10">
+            <a asp-action="index" asp-controller="envelope" class="btn btn-warning mb-3"><strong>Back</strong></a>
+        </div>
+    </div>
+
+    <div class="row">
+
+        <div class="col-md-2 d-none d-lg-block">
+            <img class="img-thumbnail" src="data:image/png;base64,@Model.Image" />
+        </div>
+
+        <div class="col-md-10">
+
+            <h2>Envelope: <strong>@Model.Envelope.Name</strong></h2>
+
+            <p>
+                Envelope ID: <strong>@Model.Envelope.EnvelopeID</strong><br />
+                From: <strong>@Model.Envelope.Sender</strong>
+            </p>
+
+            <p>
+                Status: <strong>@Model.Envelope.Status</strong> @if (Model.Envelope.Status == EnvelopeStatus.Signed) {
+                    <span style="vertical-align: bottom" class="material-icons text-success">check</span>
+                }
+            </p>
+
+            @if (Model.Envelope.Status == EnvelopeStatus.Incomplete || Model.Envelope.Status == EnvelopeStatus.New) {
+                <a asp-action="create" asp-controller="envelope" asp-route-id="@Model.Envelope.EnvelopeID" class="btn btn-success"><strong>Continue Preparing Process</strong></a>
+            }
+
+            @if (Model.Envelope.Status == EnvelopeStatus.Signed) {
+                <a target="_blank" asp-action="download" asp-controller="envelope" asp-route-id="@Model.Envelope.EnvelopeID" class="btn btn-success"><strong>Download Signed PDF</strong></a>
+
+                <a asp-action="create" asp-controller="envelope" asp-route-id="@Model.Envelope.EnvelopeID" class="btn btn-success">Resend</a>
+            }
+        </div>
+
+    </div>
+
+    @if (Model.Envelope.Status == EnvelopeStatus.Sent || Model.Envelope.Status == EnvelopeStatus.Signed) {
+
+        <div class="row">
+            <div class="col-md-8">
+
+                <h2 class="mb-3 mt-5">Envelope Signing Status <span class="material-icons text-alignment text-success">border_color</span></h2>
+
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th scope="col">Signer</th>
+                            <th scope="col">E-Mail</th>
+                            <th scope="col">Status</th>
+                            <th scope="col">Signature</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (Signer signer in Model.Envelope.Signers) {
+                            <tr>
+                                <td>@signer.Name</td>
+                                <td>@signer.Email</td>
+                                <td class="@(signer.SignerStatus == SignerStatus.Signed ? "table-success" : "table-primary")">
+                                    @if (signer.SignerStatus == SignerStatus.Signed) {
+
+                                    <span class="badge rounded-pill bg-success">Signed</span>
+
+                                    <p>
+                                        <small>
+                                            @signer.StatusChanged.Find(item => item.SignerStatus == SignerStatus.Signed).TimeStamp
+                                        </small>
+                                    </p>
+
+                                    }
+                                    else if (signer.SignerStatus == SignerStatus.Opened) {
+
+                                    <span class="badge rounded-pill bg-primary">Opened</span>
+
+                                    <p>
+                                        <small>
+                                            @signer.StatusChanged.Find(item => item.SignerStatus == SignerStatus.Opened).TimeStamp
+                                        </small>
+                                    </p>
+
+                                    }
+                                    else if (signer.SignerStatus == SignerStatus.Received) {
+                                    
+                                    <span class="badge rounded-pill bg-primary">Received</span>
+                                    
+                                    <p>
+                                        <small>
+                                            @signer.StatusChanged.Find(item => item.SignerStatus == SignerStatus.Received).TimeStamp
+                                        </small>
+                                    </p>
+
+                                    }
+                                    else {
+                                    <span class="badge rounded-pill bg-primary">Sent</span>
+                                }
+
+                                </td>
+                                <td>
+                                    @if (signer.SignerStatus == SignerStatus.Signed) {
+                                        <img class="img-thumbnail max50" src="data:image/png;base64,@signer.SignatureImage" />
+                                    }
+                                </td>
+                            </tr>
+                        }
+
+
+                    </tbody>
+                </table>
+
+            </div>
+
+        </div>
+    }
+
+    @await Html.PartialAsync("~/Views/Partial/_AuditTrail.cshtml", Model.Envelope)
+
+</section>
+
+@section scripts {
+    <script>
+        $('#collapseSignature').load('/partial/SignatureBox/@Model.Envelope.EnvelopeID');
+    </script>
+}

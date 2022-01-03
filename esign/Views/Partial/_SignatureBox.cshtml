@@ -1,0 +1,18 @@
+﻿@model SignatureBoxModel
+
+@if (Model.ContainsSignatureBoxes == false) {
+    <div class="alert alert-warning" role="alert">
+        <p><span class="material-icons text-warning">warning</span> The document doesn't contain all required signature boxes.</p>
+        <p>Please add required signature box(es) to proceed.</p>
+        <button onclick="TextControl.esign.loadEditor('@Model.EnvelopeID')" class="btn btn-warning"><strong>Add Signature Boxes</strong></button>
+    </div>
+}
+else {
+<div class="alert alert-success" role="alert">
+    <p><span class="material-icons">check_circle</span> The document contains all required signature boxes.</p>
+    <button onclick="TextControl.esign.loadEditor('@Model.EnvelopeID')" class="btn btn-warning"><strong>Edit Document</strong></button>
+</div>
+}
+
+<button onclick="TextControl.esign.nextStep('collapseRecipient')" class="btn btn-light mt-3 mb-3"><strong>Back</strong></button>
+<button id="btnSignature" @(Model.ContainsSignatureBoxes == false ? "disabled" : "") onclick="TextControl.esign.submitSignaturebox('@Model.EnvelopeID')" class="btn btn-warning mt-3 mb-3"><strong>Next</strong></button>

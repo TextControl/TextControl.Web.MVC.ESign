@@ -1,0 +1,89 @@
+﻿@using TXTextControl.Web.MVC
+
+@{
+    ViewData["Title"] = "Prepare the Template";
+}
+
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 5">
+    <div id="liveToast" class="toast hide text-white bg-success" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-header">
+            <span class="material-icons">
+                fact_check
+            </span>&nbsp;
+            <strong class="me-auto">Text Control eSign</strong>
+            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div id="liveToastMessage" class="toast-body">
+
+        </div>
+    </div>
+</div>
+
+<div id="editor"></div>
+
+<section id="home" class="container section">
+
+    <h2>New Template</h2>
+
+    <div class="row mt-5">
+
+        <div class="col-md-8 box highlight box-row" id="processSteps">
+            <h4>Upload or create a new template</h4>
+
+            <div class="row">
+                <div class="col-md-1 offset-1 status-border">
+                    <span id="statusDocument" class="status status-active"><span class="material-icons">description</span></span>
+                </div>
+                <div class="col-md-8 offset-md-1 status-content">
+                    <p>
+                        <strong>Template document</strong>
+                        <br />
+                        Please upload or create a new template.
+                    </p>
+                    <div id="collapseContract">
+                        <div id="contractUploadBox">
+                            <div class="box-frame">
+                                <div class="mb-3">
+                                    <input onchange="TextControl.esign.addTemplate(this.files)" accept=".docx, .doc, .rtf, .tx" id="files" name="files" type="file" class="form-control file">
+                                </div>
+                                <div class="mb-3">
+                                    or...
+                                </div>
+                                <div>
+                                    <input onclick="TextControl.esign.createNewTemplate()" type="button" class="btn btn-warning" value="New Template" />
+                                </div>
+                            </div>
+
+                            <div class="mt-3 waitstate">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="contractPreviewBox">
+                            <img class="img-fluid thumbnail-image thumbnail-small" src="" id="statusDocumentThumbnail" />
+                            <p class="mt-3" id="statusDocumentInfo"></p>
+
+                            <p>Template successfully created. You can modify the template in the overview.</p>
+
+                            <a asp-action="index" asp-controller="template" class="btn btn-warning mb-3"><strong>Template Overview</strong></a>
+                        </div>
+
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+
+
+</section>
+
+@section scripts {
+    <script>
+        
+    </script>
+}

@@ -1,0 +1,72 @@
+﻿@model AgreementEditModel
+@using TXTextControl.Web.MVC
+
+<div class="editor-close">
+    <button onclick="saveDocument()" class="btn btn-warning"><strong>Save and Close</strong></button>
+</div>
+
+<div class="editor-wrapper">
+    <div class="sidebar">
+
+        <div class="list-group">
+
+            <h5>Create Section <span role="button" data-bs-toggle="tooltip" data-bs-placement="top" title="Sections are text blocks that can be used to assemble the final document." class="material-icons small">info</span></h5>
+
+            <a onclick="TextControl.esign.updateSectionName()" data-bs-toggle="modal" data-bs-target="#exampleModal" data-bs-whatever="hhh" class="list-group-item list-group-item-action toolbox-item">
+                <span class="material-icons">add_circle_outline</span> Add Section
+            </a>
+
+        </div>
+
+        <div id="fieldProperties" class="">
+            <h5>Available Sections</h5>
+
+            <div id="availableSections" class="mt-2">
+                
+            </div>
+
+            <input id="deleteSection" onclick="TextControl.esign.deleteSection()" type="button" class="btn btn-danger mt-5 disabled" value="Delete Section" />
+        </div>
+
+    </div>
+    <div class="editor-document">
+        @Html.TXTextControl().TextControl(settings => {
+            settings.Dock = TXTextControl.Web.DockStyle.Fill;
+        }).LoadText(Convert.FromBase64String(Model.Document), TXTextControl.Web.BinaryStreamType.InternalUnicodeFormat).Render()
+    </div>
+</div>
+
+<script>
+    TXTextControl.addEventListener("textControlLoaded", function () {
+
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl)
+        })
+
+        TextControl.esign.updateSectionList();
+
+        TXTextControl.addEventListener("subTextPartEntered", function () {   
+            $("#deleteSection").removeClass('disabled');
+        });
+
+        TXTextControl.addEventListener("subTextPartLeft", function () {
+            $("#deleteSection").addClass('disabled');
+        });
+
+        TXTextControl.addEventListener("subTextPartDeleted", function () {
+            $("#deleteSection").addClass('disabled');
+        });
+
+    });
+
+
+    function saveDocument() {
+        TXTextControl.saveDocument(32, function (document) {
+            TextControl.esign.saveAgreement(document.data, "@Model.Template.AgreementID");
+        });
+    }
+</script>
+
+
+
