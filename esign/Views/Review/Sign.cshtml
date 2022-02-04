@@ -33,19 +33,20 @@
 
     <section id="home">
 
-        @Html.TXTextControl().DocumentViewer(s => {
-        s.DocumentData = @Model.Document;
-        s.Dock = DocumentViewerSettings.DockStyle.Window;
-        s.IsSelectionActivated = true;
-        s.ShowThumbnailPane = true;
-        s.SignatureSettings = new SignatureSettings() {
-            OwnerName = Model.Envelope.Sender,
-            ShowSignatureBar = true,
-            SignerName = Model.Signer.Name,
-            SignatureBoxName = "txsign_" + Model.Signer.Id,
-            UniqueId = Model.Envelope.EnvelopeID
-        };
-    }).Render()
+       @Html.TXTextControl().DocumentViewer(s => {
+           s.DocumentData = @Model.Document;
+           s.Dock = DocumentViewerSettings.DockStyle.Window;
+           s.IsSelectionActivated = true;
+           s.ShowThumbnailPane = true;
+           s.SignatureSettings = new SignatureSettings() {
+               OwnerName = Model.Envelope.Sender,
+               ShowSignatureBar = true,
+               SignerName = Model.Signer.Name,
+               SignatureBoxName = "txsign_" + Model.Signer.Id,
+               UniqueId = Model.Envelope.EnvelopeID,
+               RedirectUrlAfterSignature = this.Url.Action("SignDocumentFinal", "Review", new { userId = Model.Envelope.UserID, envelopeId = Model.Envelope.EnvelopeID, signerId = Model.Signer.Id }, Context.Request.Scheme, null),
+           };
+        }).Render()
 
     </section>
 
@@ -54,11 +55,10 @@
     <script src="~/js/site.min.js" asp-append-version="true"></script>
 
     <script>
-        $(document).ready(function () {
-            TXDocumentViewer.signatures.setSubmitCallback(exportPDF);
-        });
 
         window.addEventListener("documentViewerLoaded", function () {
+
+            TXDocumentViewer.signatures.setSubmitCallback(exportPDF);
 
             $("#tx-documentViewer").css("z-index", 800);
 
@@ -69,32 +69,11 @@
 
         function exportPDF(e) {
 
-            var signature = localStorage.getItem('__TX-Viewer-Sig-Image');
-
-            var signedDocumentModel = {
-                "envelope": @Json.Serialize(Model.Envelope),
-                "SignatureModel": e,
-                "SignerId": "@Model.Signer.Id",
-                "SignatureImage": signature
-            };
-
-            var serviceURL = "@Url.Action("SignDocumentFinal", "Review")";
-            // send document to controller
-            $.ajax({
-                type: "POST",
-                url: serviceURL,
-                data: signedDocumentModel,
-                success: successFunc,
-                error: errorFunc
-            });
-        }
-
-        function successFunc(data, status) {
-            window.location.replace("/review/thanks/" + window.location.pathname.split("/").pop());
-        }
-
-        function errorFunc(data, status) {
-            alert(data);
+            if (e == "true") {
+                window.location.replace("/review/thanks/" + window.location.pathname.split("/").pop());
+            }
+            else
+                alert(data);
         }
 
     </script>

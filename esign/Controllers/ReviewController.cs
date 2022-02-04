@@ -8,12 +8,14 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using TXTextControl.Web.MVC.DocumentViewer.Models;
 
 namespace esign.Controllers {
 
@@ -156,34 +158,44 @@ namespace esign.Controllers {
 		}
 
 		[HttpPost]
-		public IActionResult SignDocumentFinal(SignedDocumentModel document) {
+		public IActionResult SignDocumentFinal([FromBody] SignatureData data, string userID, string envelopeId, string signerId) {
 
-			var _store = new EnvelopeStore(document.Envelope.UserID);
-			Envelope envelope = _store.GetEnvelopes(document.Envelope.EnvelopeID).First();
+			var _store = new EnvelopeStore(userID);
+
+			Envelope envelope = _store.GetEnvelopes(envelopeId).First();
+
 			Signer currentSigner = null;
 
 			foreach (Signer signer in envelope.Signers) {
-				if (signer.Id == document.SignerId)
+				if (signer.Id == signerId)
 					currentSigner = signer;
 			}
 
 			// get IP address 
-			document.SignatureModel.IPAddress = Request.HttpContext.Connection.RemoteIpAddress.ToString();
-			currentSigner.SignatureInformation = document.SignatureModel;
+			currentSigner.SignatureInformation = new SignatureModel()
+			{
+				Document = data.SignedDocument.Document,
+				IPAddress = Request.HttpContext.Connection.RemoteIpAddress.ToString(),
+				NumPages = data.SignedDocument.NumPages,
+				SignerInitials = data.SignedDocument.SignerInitials,
+				SignerName = data.SignedDocument.SignerName,
+				TimeStamp = data.SignedDocument.TimeStamp,
+				UniqueId = data.SignedDocument.UniqueId
+			};
 
 			// update DB
 			_store.Update(envelope.EnvelopeID, envelope);
 
-			byte[] signedDocument = Convert.FromBase64String(document.SignatureModel.Document);
+			byte[] signedDocument = Convert.FromBase64String(data.SignedDocument.Document);
 
 			using (var ms = new MemoryStream(signedDocument)) {
-				_store.UploadSignedDocument(envelope, ms, document.SignerId);
+				_store.UploadSignedDocument(envelope, ms, signerId);
 			}
 
-			byte[] signatureImage = Convert.FromBase64String(document.SignatureImage);
+			byte[] signatureImage = Convert.FromBase64String(data.SignatureImage);
 
 			using (var ms = new MemoryStream(signatureImage)) {
-				_store.UploadSignatureImage(envelope, ms, document.SignerId);
+				_store.UploadSignatureImage(envelope, ms, signerId);
 			}
 
 			ConfirmationEmail email = new ConfirmationEmail(_credentials);
@@ -204,16 +216,16 @@ namespace esign.Controllers {
 				string masterDocument;
 				List<string> signedDocuments = null;
 
-				if (envelope.Signers.Count > 1) { 
-					masterDocument = _store.GetDocument(document.Envelope.EnvelopeID);
+				if (envelope.Signers.Count > 1) {
+					masterDocument = _store.GetDocument(envelopeId);
 					signedDocuments = new List<string>();
 
 					foreach (Signer signer in envelope.Signers) {
-						signedDocuments.Add(_store.GetSignedDocument(document.Envelope.EnvelopeID, signer.Id));
+						signedDocuments.Add(_store.GetSignedDocument(envelopeId, signer.Id));
 					}
 				}
 				else {
-					masterDocument = _store.GetSignedDocument(document.Envelope.EnvelopeID, envelope.Signers[0].Id);
+					masterDocument = _store.GetSignedDocument(envelopeId, envelope.Signers[0].Id);
 				}
 
 				TextControlHelpers tx = new TextControlHelpers(masterDocument);
@@ -237,7 +249,7 @@ namespace esign.Controllers {
 
 			_store.Update(envelope.EnvelopeID, envelope);
 
-			return Ok();			
+			return Ok(true);			
 		}
 
 	}

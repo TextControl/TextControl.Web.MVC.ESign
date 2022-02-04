@@ -34,7 +34,7 @@
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="5.0.2" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
     <PackageReference Include="TXTextControl.Web" Version="30.0.1000.500" />
-    <PackageReference Include="TXTextControl.Web.DocumentViewer" Version="30.0.400.500" />
+    <PackageReference Include="TXTextControl.Web.DocumentViewer" Version="30.0.402.500" />
    
   </ItemGroup>
 
